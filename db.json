@@ -199,16 +199,16 @@
   ],
   "conductores": [
     {
-      "id": "COND-1790022019259",
-      "nombre": "juan perez",
-      "cedula": "123145",
-      "telefono": "3212154",
-      "correo": "nuevo@gmail.com",
-      "zona": "soacha",
+      "id": "aae24ac5-bafd-49d0-aec6-4bf48d8d7eb8",
+      "nombre": "Frank Martinez",
+      "cedula": "1033695249",
+      "telefono": "3224337505",
+      "correo": "frankmartinezzduarte@gmail.com",
+      "zona": "Bogotá Sur",
       "estado": "Activo"
     }
   ],
-  "rutas": [
+    "rutas": [
     {
       "nombre": "asd",
       "zona": "asd",
@@ -235,5 +235,6 @@
       "fechaCreacion": "2026-09-21T20:43:32.166Z",
       "id": 2
     }
-  ]
+  ],
+  "solicitudes": []
 }

@@ -17,6 +17,11 @@ const menu = [
     icon: 'bi-basket3',
   },
   {
+    id: 'solicitudes',
+    label: 'Mis solicitudes',
+    icon: 'bi-clipboard-check',
+  },
+  {
     id: 'pedidos',
     label: 'Mis pedidos',
     icon: 'bi-box-seam',
@@ -44,9 +49,11 @@ function ClienteDashboard() {
   const [active, setActive] = useState('inicio')
   const [productos, setProductos] = useState([])
   const [pedidos, setPedidos] = useState([])
+  const [solicitudes, setSolicitudes] = useState([])
   const [carrito, setCarrito] = useState([])
+  const [direccion, setDireccion] = useState('')
   const [cargando, setCargando] = useState(true)
-  const [creandoPedido, setCreandoPedido] = useState(false)
+  const [creandoSolicitud, setCreandoSolicitud] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [tipoMensaje, setTipoMensaje] = useState('warning')
 
@@ -67,11 +74,26 @@ function ClienteDashboard() {
       setCargando(true)
       setMensaje('')
 
-      const [productosData, pedidosData] =
-        await Promise.all([
-          apiRequest('/productos'),
-          apiRequest('/pedidos'),
-        ])
+      const resultados = await Promise.allSettled([
+        apiRequest('/productos'),
+        apiRequest('/pedidos'),
+        apiRequest('/solicitudes'),
+      ])
+
+      const productosData =
+        resultados[0].status === 'fulfilled'
+          ? resultados[0].value
+          : []
+
+      const pedidosData =
+        resultados[1].status === 'fulfilled'
+          ? resultados[1].value
+          : []
+
+      const solicitudesData =
+        resultados[2].status === 'fulfilled'
+          ? resultados[2].value
+          : []
 
       setProductos(
         Array.isArray(productosData)
@@ -82,6 +104,12 @@ function ClienteDashboard() {
       setPedidos(
         Array.isArray(pedidosData)
           ? pedidosData
+          : []
+      )
+
+      setSolicitudes(
+        Array.isArray(solicitudesData)
+          ? solicitudesData
           : []
       )
     } catch (error) {
@@ -114,38 +142,68 @@ function ClienteDashboard() {
 
       return (
         emailPedido &&
-        emailPedido === correoUsuario.trim().toLowerCase()
+        emailPedido ===
+          correoUsuario.trim().toLowerCase()
       )
     })
   }, [pedidos, correoUsuario])
 
-  const pedidosEnRuta = misPedidos.filter(pedido => {
-    const estado = String(
-      pedido?.estado || ''
-    ).toLowerCase()
+  const misSolicitudes = useMemo(() => {
+    if (!correoUsuario) {
+      return []
+    }
 
-    return (
-      estado === 'en ruta' ||
-      estado === 'en camino' ||
-      estado === 'despachado'
-    )
-  }).length
+    return solicitudes
+      .filter(solicitud => {
+        const emailSolicitud = String(
+          solicitud?.clienteEmail || ''
+        )
+          .trim()
+          .toLowerCase()
 
-  const pedidosEntregados = misPedidos.filter(pedido => {
-    return (
-      String(
+        return (
+          emailSolicitud &&
+          emailSolicitud ===
+            correoUsuario.trim().toLowerCase()
+        )
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.fecha || 0) -
+          new Date(a.fecha || 0)
+      )
+  }, [solicitudes, correoUsuario])
+
+  const solicitudesPendientes =
+    misSolicitudes.filter(
+      solicitud =>
+        String(
+          solicitud.estado || ''
+        ).toLowerCase() === 'pendiente'
+    ).length
+
+  const pedidosEnRuta = misPedidos.filter(
+    pedido => {
+      const estado = String(
         pedido?.estado || ''
-      ).toLowerCase() === 'entregado'
-    )
-  }).length
+      ).toLowerCase()
 
-  const totalFacturas = misPedidos.filter(pedido => {
-    const estado = String(
-      pedido?.estado || ''
-    ).toLowerCase()
+      return (
+        estado === 'en ruta' ||
+        estado === 'en camino' ||
+        estado === 'despachado'
+      )
+    }
+  ).length
 
-    return estado === 'entregado'
-  }).length
+  const pedidosEntregados =
+    misPedidos.filter(pedido => {
+      return (
+        String(
+          pedido?.estado || ''
+        ).toLowerCase() === 'entregado'
+      )
+    }).length
 
   const totalCarrito = useMemo(() => {
     return carrito.reduce(
@@ -168,18 +226,40 @@ function ClienteDashboard() {
   const agregarAlCarrito = producto => {
     setMensaje('')
 
+    const stock = Number(producto.stock || 0)
+
+    if (stock <= 0) {
+      setTipoMensaje('warning')
+      setMensaje(
+        `${producto.nombre} no tiene stock disponible.`
+      )
+      return
+    }
+
     setCarrito(prev => {
       const existente = prev.find(
         item => item.id === producto.id
       )
 
       if (existente) {
+        const cantidadActual = Number(
+          existente.cantidad || 0
+        )
+
+        if (cantidadActual >= stock) {
+          setTipoMensaje('warning')
+          setMensaje(
+            `Solo hay ${stock} unidades disponibles de ${producto.nombre}.`
+          )
+
+          return prev
+        }
+
         return prev.map(item =>
           item.id === producto.id
             ? {
                 ...item,
-                cantidad:
-                  Number(item.cantidad || 0) + 1,
+                cantidad: cantidadActual + 1,
               }
             : item
         )
@@ -193,14 +273,44 @@ function ClienteDashboard() {
         },
       ]
     })
+
+    setTipoMensaje('success')
+    setMensaje(
+      `${producto.nombre} fue agregado al pedido.`
+    )
   }
 
-  const cambiarCantidad = (productoId, cantidad) => {
+  const cambiarCantidad = (
+    productoId,
+    cantidad
+  ) => {
     const nuevaCantidad = Number(cantidad)
+
+    const producto = productos.find(
+      item => item.id === productoId
+    )
+
+    if (!producto) {
+      return
+    }
 
     if (nuevaCantidad <= 0) {
       setCarrito(prev =>
-        prev.filter(item => item.id !== productoId)
+        prev.filter(
+          item => item.id !== productoId
+        )
+      )
+      return
+    }
+
+    const stockDisponible = Number(
+      producto.stock || 0
+    )
+
+    if (nuevaCantidad > stockDisponible) {
+      setTipoMensaje('warning')
+      setMensaje(
+        `Solo hay ${stockDisponible} unidades disponibles de ${producto.nombre}.`
       )
       return
     }
@@ -219,15 +329,17 @@ function ClienteDashboard() {
 
   const eliminarDelCarrito = productoId => {
     setCarrito(prev =>
-      prev.filter(item => item.id !== productoId)
+      prev.filter(
+        item => item.id !== productoId
+      )
     )
   }
 
-  const crearPedido = async () => {
+  const enviarSolicitud = async () => {
     if (!carrito.length) {
       setTipoMensaje('warning')
       setMensaje(
-        'Agrega al menos un producto al pedido.'
+        'Agrega al menos un producto a tu solicitud.'
       )
       return
     }
@@ -240,78 +352,86 @@ function ClienteDashboard() {
       return
     }
 
+    if (!direccion.trim()) {
+      setTipoMensaje('warning')
+      setMensaje(
+        'Ingresa la dirección donde deseas recibir tu pedido.'
+      )
+      return
+    }
+
     try {
-      setCreandoPedido(true)
+      setCreandoSolicitud(true)
       setMensaje('')
 
-      const pedidosCreados = []
+      const items = carrito.map(item => {
+        const cantidad = Number(
+          item.cantidad || 0
+        )
 
-      for (const item of carrito) {
-        const cantidad = Number(item.cantidad || 0)
         const precioUnitario = Number(
           item.precio || 0
         )
-        const subtotal =
-          cantidad * precioUnitario
 
-        const nuevoPedido = {
-          id: `PED-${Date.now()}-${Math.floor(
-            Math.random() * 1000
-          )}`,
-          fecha: new Date()
-            .toISOString()
-            .slice(0, 10),
-
-          cliente: nombreUsuario,
-          clienteEmail: correoUsuario,
-
-          direccion: 'Pendiente por confirmar',
-
+        return {
           productoId: item.id,
           producto: item.nombre,
-
           cantidad,
           precioUnitario,
-          subtotal,
-          total: subtotal,
-
-          conductor: 'Sin asignar',
-          ruta: 'Sin asignar',
-
-          estado: 'Pendiente',
+          subtotal:
+            cantidad * precioUnitario,
         }
+      })
 
-        const pedidoCreado = await apiRequest(
-          '/pedidos',
-          {
-            method: 'POST',
-            body: JSON.stringify(
-              nuevoPedido
-            ),
-          }
-        )
+      const solicitud = {
+        id: `SOL-${Date.now()}-${Math.floor(
+          Math.random() * 1000
+        )}`,
 
-        pedidosCreados.push(pedidoCreado)
+        fecha: new Date().toISOString(),
+
+        cliente: nombreUsuario,
+        clienteEmail: correoUsuario,
+
+        direccion: direccion.trim(),
+
+        items,
+
+        cantidadTotal: cantidadCarrito,
+        total: totalCarrito,
+
+        estado: 'Pendiente',
+
+        observacion:
+          'Solicitud enviada por el cliente.',
+
+        pedidoId: null,
       }
 
+      await apiRequest('/solicitudes', {
+        method: 'POST',
+        body: JSON.stringify(solicitud),
+      })
+
       setCarrito([])
+      setDireccion('')
 
       setTipoMensaje('success')
       setMensaje(
-        `Pedido creado correctamente. Se registraron ${pedidosCreados.length} pedido(s).`
+        'Solicitud enviada correctamente. Administración debe revisarla antes de convertirla en pedido.'
       )
 
       await cargarDatos()
-      setActive('pedidos')
+      setActive('solicitudes')
     } catch (error) {
       console.error(error)
 
       setTipoMensaje('warning')
       setMensaje(
-        'No fue posible crear el pedido.'
+        'No fue posible enviar la solicitud de pedido.'
       )
     } finally {
-      setCreandoPedido(false)
+      setCreandoSolicitud(false)
     }
   }
 
@@ -333,11 +453,12 @@ function ClienteDashboard() {
     )
   }, [misPedidos])
 
-  const estadoPedido = pedidoEnSeguimiento
-    ? String(
-        pedidoEnSeguimiento.estado || ''
-      ).toLowerCase()
-    : ''
+  const estadoPedido =
+    pedidoEnSeguimiento
+      ? String(
+          pedidoEnSeguimiento.estado || ''
+        ).toLowerCase()
+      : ''
 
   const preparado =
     estadoPedido === 'en preparación' ||
@@ -399,9 +520,9 @@ function ClienteDashboard() {
                 />
 
                 <StatCard
-                  icon="bi-receipt"
-                  label="Entregados"
-                  value={pedidosEntregados}
+                  icon="bi-clipboard-check"
+                  label="Solicitudes"
+                  value={solicitudesPendientes}
                 />
 
                 <StatCard
@@ -427,8 +548,9 @@ function ClienteDashboard() {
                 </h2>
 
                 <p>
-                  Consulta el catálogo, crea pedidos
-                  y revisa el estado de tus entregas.
+                  Consulta el catálogo, prepara tu
+                  solicitud y revisa el estado de tus
+                  pedidos.
                 </p>
 
                 <div className="dashboard-actions">
@@ -438,16 +560,18 @@ function ClienteDashboard() {
                       setActive('catalogo')
                     }
                   >
-                    <i className="bi bi-basket3" /> Ver catálogo
+                    <i className="bi bi-basket3" />{' '}
+                    Ver catálogo
                   </button>
 
                   <button
                     className="btn btn-outline"
                     onClick={() =>
-                      setActive('pedidos')
+                      setActive('solicitudes')
                     }
                   >
-                    <i className="bi bi-box-seam" /> Mis pedidos
+                    <i className="bi bi-clipboard-check" />{' '}
+                    Mis solicitudes
                   </button>
                 </div>
               </section>
@@ -468,7 +592,8 @@ function ClienteDashboard() {
                 </div>
 
                 <span className="status">
-                  {productos.length} productos
+                  {productos.length}{' '}
+                  productos
                 </span>
               </div>
 
@@ -539,12 +664,13 @@ function ClienteDashboard() {
                           </p>
 
                           <h2>
-                            Tu pedido
+                            Tu solicitud
                           </h2>
                         </div>
 
                         <span className="status">
-                          {cantidadCarrito} unidades
+                          {cantidadCarrito}{' '}
+                          unidades
                         </span>
                       </div>
 
@@ -634,13 +760,49 @@ function ClienteDashboard() {
                       </div>
 
                       <div
+                        className="dashboard-panel"
+                        style={{
+                          marginTop: '20px',
+                        }}
+                      >
+                        <p className="eyebrow">
+                          ENTREGA
+                        </p>
+
+                        <h3>
+                          Dirección de entrega
+                        </h3>
+
+                        <div className="auth-field">
+                          <label>
+                            Dirección
+                          </label>
+
+                          <div className="auth-input-wrap">
+                            <i className="bi bi-geo-alt" />
+
+                            <input
+                              type="text"
+                              value={direccion}
+                              onChange={e =>
+                                setDireccion(
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Ej. Calle 80 # 20-15, Bogotá"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
                         className="panel-head"
                         style={{
                           marginTop: '20px',
                         }}
                       >
                         <strong>
-                          Total del pedido
+                          Total de la solicitud
                         </strong>
 
                         <h3>
@@ -653,17 +815,220 @@ function ClienteDashboard() {
 
                       <button
                         className="btn btn-purple"
-                        disabled={creandoPedido}
-                        onClick={crearPedido}
+                        disabled={
+                          creandoSolicitud
+                        }
+                        onClick={
+                          enviarSolicitud
+                        }
                       >
-                        <i className="bi bi-check2-circle" />{' '}
-                        {creandoPedido
-                          ? 'Creando pedido...'
-                          : 'Confirmar pedido'}
+                        <i className="bi bi-send" />{' '}
+                        {creandoSolicitud
+                          ? 'Enviando solicitud...'
+                          : 'Enviar solicitud de pedido'}
                       </button>
                     </div>
                   )}
                 </>
+              )}
+            </section>
+          )}
+
+          {active === 'solicitudes' && (
+            <section className="dashboard-panel">
+              <div className="panel-head">
+                <div>
+                  <p className="eyebrow">
+                    SOLICITUDES
+                  </p>
+
+                  <h2>
+                    Mis solicitudes de pedido
+                  </h2>
+                </div>
+
+                <span className="status">
+                  {misSolicitudes.length}{' '}
+                  solicitudes
+                </span>
+              </div>
+
+              {misSolicitudes.length === 0 ? (
+                <div className="empty-state">
+                  <i className="bi bi-clipboard-check" />
+
+                  <h3>
+                    No tienes solicitudes
+                  </h3>
+
+                  <p>
+                    Cuando envíes una solicitud
+                    desde el catálogo, aparecerá
+                    aquí.
+                  </p>
+
+                  <button
+                    className="btn btn-purple"
+                    onClick={() =>
+                      setActive('catalogo')
+                    }
+                  >
+                    <i className="bi bi-basket3" />{' '}
+                    Ir al catálogo
+                  </button>
+                </div>
+              ) : (
+                <div className="order-list">
+                  {misSolicitudes.map(
+                    solicitud => (
+                      <article
+                        className="order-card"
+                        key={solicitud.id}
+                      >
+                        <div className="order-title">
+                          <div>
+                            <span className="order-id">
+                              #{solicitud.id}
+                            </span>
+
+                            <h3>
+                              Solicitud de pedido
+                            </h3>
+                          </div>
+
+                          <span className="status">
+                            {solicitud.estado ||
+                              'Pendiente'}
+                          </span>
+                        </div>
+
+                        <div className="order-details">
+                          <span>
+                            <i className="bi bi-calendar3" />{' '}
+                            {solicitud.fecha
+                              ? new Date(
+                                  solicitud.fecha
+                                ).toLocaleDateString(
+                                  'es-CO'
+                                )
+                              : 'Fecha no disponible'}
+                          </span>
+
+                          <span>
+                            <i className="bi bi-box-seam" />{' '}
+                            {solicitud.cantidadTotal ||
+                              0}{' '}
+                            unidades
+                          </span>
+
+                          <span>
+                            <i className="bi bi-geo-alt" />{' '}
+                            {solicitud.direccion ||
+                              'Dirección pendiente'}
+                          </span>
+
+                          <span>
+                            <i className="bi bi-currency-dollar" />{' '}
+                            $
+                            {Number(
+                              solicitud.total ||
+                                0
+                            ).toLocaleString(
+                              'es-CO'
+                            )}
+                          </span>
+                        </div>
+
+                        {Array.isArray(
+                          solicitud.items
+                        ) && (
+                          <div
+                            style={{
+                              marginTop: '16px',
+                            }}
+                          >
+                            {solicitud.items.map(
+                              item => (
+                                <div
+                                  key={
+                                    item.productoId
+                                  }
+                                  style={{
+                                    display:
+                                      'flex',
+                                    justifyContent:
+                                      'space-between',
+                                    padding:
+                                      '8px 0',
+                                  }}
+                                >
+                                  <span>
+                                    {item.producto}{' '}
+                                    ×{' '}
+                                    {
+                                      item.cantidad
+                                    }
+                                  </span>
+
+                                  <strong>
+                                    $
+                                    {Number(
+                                      item.subtotal ||
+                                        0
+                                    ).toLocaleString(
+                                      'es-CO'
+                                    )}
+                                  </strong>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+
+                        <div
+                          className="dashboard-actions"
+                          style={{
+                            marginTop: '16px',
+                          }}
+                        >
+                          {String(
+                            solicitud.estado ||
+                              ''
+                          ).toLowerCase() ===
+                            'pendiente' && (
+                            <span>
+                              <i className="bi bi-hourglass-split" />{' '}
+                              Pendiente de revisión
+                              por administración
+                            </span>
+                          )}
+
+                          {String(
+                            solicitud.estado ||
+                              ''
+                          ).toLowerCase() ===
+                            'aceptada' && (
+                            <span>
+                              <i className="bi bi-check-circle" />{' '}
+                              Solicitud aceptada
+                            </span>
+                          )}
+
+                          {String(
+                            solicitud.estado ||
+                              ''
+                          ).toLowerCase() ===
+                            'rechazada' && (
+                            <span>
+                              <i className="bi bi-x-circle" />{' '}
+                              Solicitud rechazada
+                            </span>
+                          )}
+                        </div>
+                      </article>
+                    )
+                  )}
+                </div>
               )}
             </section>
           )}
@@ -695,8 +1060,9 @@ function ClienteDashboard() {
                   </h3>
 
                   <p>
-                    Cuando realices un pedido,
-                    aparecerá aquí.
+                    Los pedidos aparecerán aquí
+                    cuando administración apruebe
+                    una solicitud.
                   </p>
 
                   <button
@@ -705,7 +1071,8 @@ function ClienteDashboard() {
                       setActive('catalogo')
                     }
                   >
-                    <i className="bi bi-basket3" /> Ir al catálogo
+                    <i className="bi bi-basket3" />{' '}
+                    Ir al catálogo
                   </button>
                 </div>
               ) : (
@@ -821,45 +1188,48 @@ function ClienteDashboard() {
                 </div>
               ) : (
                 <div className="order-list">
-                  {misPedidos.map((pedido, index) => (
-                    <article
-                      className="invoice-card"
-                      key={pedido.id}
-                    >
-                      <div>
-                        <span className="order-id">
-                          FAC-{String(
-                            index + 1
-                          ).padStart(3, '0')}
+                  {misPedidos.map(
+                    (pedido, index) => (
+                      <article
+                        className="invoice-card"
+                        key={pedido.id}
+                      >
+                        <div>
+                          <span className="order-id">
+                            FAC-
+                            {String(
+                              index + 1
+                            ).padStart(3, '0')}
+                          </span>
+
+                          <h3>
+                            Pedido #{pedido.id}
+                          </h3>
+
+                          <p>
+                            {pedido.producto ||
+                              'Pedido'}{' '}
+                            ·{' '}
+                            {pedido.fecha ||
+                              'Fecha no disponible'}
+                          </p>
+                        </div>
+
+                        <strong>
+                          $
+                          {Number(
+                            pedido.total || 0
+                          ).toLocaleString(
+                            'es-CO'
+                          )}
+                        </strong>
+
+                        <span className="status success">
+                          Registrada
                         </span>
-
-                        <h3>
-                          Pedido #{pedido.id}
-                        </h3>
-
-                        <p>
-                          {pedido.producto ||
-                            'Pedido'}{' '}
-                          ·{' '}
-                          {pedido.fecha ||
-                            'Fecha no disponible'}
-                        </p>
-                      </div>
-
-                      <strong>
-                        $
-                        {Number(
-                          pedido.total || 0
-                        ).toLocaleString(
-                          'es-CO'
-                        )}
-                      </strong>
-
-                      <span className="status success">
-                        Registrada
-                      </span>
-                    </article>
-                  ))}
+                      </article>
+                    )
+                  )}
                 </div>
               )}
             </section>
@@ -884,9 +1254,9 @@ function ClienteDashboard() {
                   </h3>
 
                   <p>
-                    Cuando tengas un pedido
-                    registrado, podrás consultar
-                    su estado aquí.
+                    Cuando administración apruebe
+                    una solicitud, podrás consultar
+                    aquí el avance de tu pedido.
                   </p>
                 </div>
               ) : (

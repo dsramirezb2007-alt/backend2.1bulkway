@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { apiRequest } from '../../services/api'
+import { supabase } from '../../services/supabase'
 
 import Modal from '../shared/Modal'
 
@@ -92,11 +93,69 @@ function EmpleadosAdmin() {
       return
     }
 
+    if (!supabase) {
+      setMensaje('No fue posible conectar con Supabase.')
+      return
+    }
+
     try {
       setGuardando(true)
 
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
+
+      console.log('SESION ACTUAL:', session)
+      console.log('ERROR SESION:', sessionError)
+
+      if (!session?.access_token) {
+        setMensaje('La sesión del administrador no está disponible.')
+        return
+      }
+
+      const { data, error } = await supabase.functions.invoke(
+        'crear-conductor',
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: {
+            nombre: form.nombre.trim(),
+            email: form.correo.trim(),
+          },
+        }
+      )
+
+      if (error) {
+        console.error('Error de Edge Function:', error)
+
+        let mensajeError = error.message || 'No fue posible crear el conductor.'
+
+        if (error.context) {
+          try {
+            const respuesta = await error.context.json()
+
+            if (respuesta?.error) {
+              mensajeError = respuesta.error
+            }
+          } catch {}
+        }
+
+        setMensaje(mensajeError)
+        return
+      }
+
+      if (!data?.ok || !data?.conductor?.id) {
+        setMensaje(
+          data?.error ||
+            'Supabase no devolvió la información del conductor.'
+        )
+        return
+      }
+
       const nuevoConductor = {
-        id: `COND-${Date.now()}`,
+        id: data.conductor.id,
         nombre: form.nombre.trim(),
         cedula: form.cedula.trim(),
         telefono: form.telefono.trim(),
@@ -114,10 +173,17 @@ function EmpleadosAdmin() {
 
       setForm(formularioInicial)
       setOpen(false)
-      setMensaje(`El conductor ${nuevoConductor.nombre} fue registrado correctamente.`)
+
+      setMensaje(
+        `El conductor ${nuevoConductor.nombre} fue registrado correctamente. Se envió una invitación a ${nuevoConductor.correo}.`
+      )
     } catch (error) {
       console.error(error)
-      setMensaje('No fue posible registrar el conductor.')
+
+      setMensaje(
+        error?.message ||
+          'No fue posible registrar el conductor.'
+      )
     } finally {
       setGuardando(false)
     }
@@ -330,7 +396,7 @@ function EmpleadosAdmin() {
             <i className="bi bi-check2-circle" />
 
             {guardando
-              ? 'Guardando...'
+              ? 'Creando conductor...'
               : 'Guardar conductor'}
           </button>
         </form>

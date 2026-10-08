@@ -7,6 +7,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import AdminDashboard from './components/admin/AdminDashboard'
 import ConductorDashboard from './components/conductor/ConductorDashboard'
 import ClienteDashboard from './components/cliente/ClienteDashboard'
+import CrearcuentaConductor from './components/auth/CrearcuentaConductor'
 
 function Denied() {
   return (
@@ -92,6 +93,11 @@ function App() {
             <ClienteDashboard />
           </ProtectedRoute>
         }
+      />
+
+      <Route
+        path="/crear-cuenta-conductor"
+        element={<CrearcuentaConductor />}
       />
     </Routes>
   )

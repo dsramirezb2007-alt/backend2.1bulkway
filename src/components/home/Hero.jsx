@@ -24,6 +24,7 @@ function Hero() {
             </p>
 
             <div className="hero-actions">
+
               <a
                 href="/login"
                 className="btn btn-purple"
@@ -32,11 +33,13 @@ function Hero() {
               </a>
 
               <a
-                href="#empresa"
+                href="#catalogo"
                 className="hero-text-link"
               >
-                Conocer la plataforma <span>↗</span>
+                Ver catálogo
+                <i className="bi bi-arrow-down-right"></i>
               </a>
+
             </div>
 
           </div>
@@ -51,6 +54,7 @@ function Hero() {
                     <span className="preview-label">
                       CENTRO DE OPERACIONES
                     </span>
+
                     <strong>BulkWay</strong>
                   </div>
 
@@ -61,26 +65,35 @@ function Hero() {
                 </div>
 
                 <div className="preview-stats">
+
                   <div>
                     <i className="bi bi-box-seam"></i>
+
                     <span>Pedidos</span>
+
                     <strong>128</strong>
                   </div>
 
                   <div>
                     <i className="bi bi-truck"></i>
+
                     <span>En ruta</span>
+
                     <strong>24</strong>
                   </div>
 
                   <div>
                     <i className="bi bi-boxes"></i>
+
                     <span>Inventario</span>
+
                     <strong>86%</strong>
                   </div>
+
                 </div>
 
                 <div className="preview-route">
+
                   <div className="route-line">
                     <span></span>
                     <span></span>
@@ -90,48 +103,70 @@ function Hero() {
                   <div className="route-info">
                     <div>
                       <small>RUTA EN OPERACIÓN</small>
+
                       <strong>Distribución urbana</strong>
                     </div>
 
                     <i className="bi bi-arrow-up-right"></i>
                   </div>
+
                 </div>
 
                 <div className="preview-orders">
+
                   <div>
                     <span className="preview-dot"></span>
+
                     <div>
                       <strong>Pedido #BW-2048</strong>
-                      <small>En ruta · Bogotá</small>
+
+                      <small>
+                        En ruta · Bogotá
+                      </small>
                     </div>
                   </div>
 
                   <div>
                     <span className="preview-dot"></span>
+
                     <div>
                       <strong>Pedido #BW-2049</strong>
-                      <small>Preparando despacho</small>
+
+                      <small>
+                        Preparando despacho
+                      </small>
                     </div>
                   </div>
+
                 </div>
 
               </div>
             </div>
 
             <div className="floating-note note-one">
+
               <strong>
                 <i className="bi bi-diagram-3"></i>
                 Operación conectada
               </strong>
-              <span>Todos tus procesos en un solo lugar</span>
+
+              <span>
+                Todos tus procesos en un solo lugar
+              </span>
+
             </div>
 
             <div className="floating-note note-two">
+
               <strong>
                 <i className="bi bi-geo-alt"></i>
                 Rutas y entregas
               </strong>
-              <span>Seguimiento de la distribución</span>
+
+              <span>
+                Seguimiento de la distribución
+              </span>
+
             </div>
 
           </div>
@@ -140,10 +175,21 @@ function Hero() {
       </div>
 
       <div className="hero-bottom">
-        <div>CLIENTES · PRODUCTOS</div>
-        <div>PEDIDOS · INVENTARIO · FACTURACIÓN</div>
-        <div>RUTAS · CONDUCTORES · ENTREGAS</div>
+
+        <div>
+          CLIENTES · PRODUCTOS
+        </div>
+
+        <div>
+          PEDIDOS · INVENTARIO · FACTURACIÓN
+        </div>
+
+        <div>
+          RUTAS · CONDUCTORES · ENTREGAS
+        </div>
+
       </div>
+
     </header>
   )
 }

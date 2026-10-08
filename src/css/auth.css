@@ -1207,3 +1207,27 @@
 .forgot-password-link:hover i {
   transform: rotate(-8deg);
 }
+
+.register-account-data {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  margin-bottom: 17px;
+}
+
+.register-account-data .auth-input-wrap input {
+  background: #f5f2f9;
+  color: #746b82;
+  cursor: default;
+}
+
+.register-account-data .auth-input-wrap input:hover {
+  background: #f5f2f9;
+  border-color: #e5dff0;
+}
+
+.register-account-data .auth-input-wrap input:focus {
+  border-color: #e5dff0;
+  background: #f5f2f9;
+  box-shadow: none;
+}

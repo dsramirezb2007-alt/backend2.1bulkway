@@ -10,14 +10,24 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/functions-js": "^2.117.3",
+    "@supabase/server": "^1.9.1",
     "@supabase/supabase-js": "^2.116.0",
     "@vitejs/plugin-react": "latest",
     "bootstrap": "latest",
     "bootstrap-icons": "latest",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "json-server": "^0.17.4",
+    "jsonwebtoken": "^9.0.3",
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "^7.18.3",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "vite": "latest"
+  },
+  "devDependencies": {
+    "supabase": "^2.120.0"
   }
 }

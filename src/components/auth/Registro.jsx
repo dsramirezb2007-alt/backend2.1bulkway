@@ -1,45 +1,15 @@
 import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-
+import { Link } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 
 function Registro() {
-  const [searchParams] = useSearchParams()
-
-  const rolUrl = searchParams.get('rol')
-  const rolesValidos = ['cliente', 'conductor']
-
-  const rolInicial = rolesValidos.includes(rolUrl)
-    ? rolUrl
-    : 'cliente'
-
-  const [rol, setRol] = useState(rolInicial)
   const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [mensaje, setMensaje] = useState('')
   const [cargando, setCargando] = useState(false)
 
-  const nombresRol = {
-    cliente: 'cliente',
-    conductor: 'conductor',
-  }
-
-  const cambiarRol = (nuevoRol) => {
-    setRol(nuevoRol)
-    setMensaje('')
-
-    const params = new URLSearchParams()
-    params.set('rol', nuevoRol)
-
-    window.history.replaceState(
-      {},
-      '',
-      `/registro?${params.toString()}`
-    )
-  }
-
-  const registrarUsuario = async (e) => {
+  const registrarUsuario = async e => {
     e.preventDefault()
 
     setMensaje('')
@@ -59,7 +29,7 @@ function Registro() {
       options: {
         data: {
           nombre,
-          rol,
+          rol: 'cliente',
         },
       },
     })
@@ -72,7 +42,7 @@ function Registro() {
     }
 
     setMensaje(
-      `Cuenta de ${nombresRol[rol]} creada. Revisa tu correo si la confirmación de email está activada.`
+      'Cuenta de cliente creada. Revisa tu correo si la confirmación de email está activada.'
     )
   }
 
@@ -82,14 +52,8 @@ function Registro() {
       <div className="auth-background-glow auth-glow-two"></div>
 
       <div className="auth-shell register-shell">
-
-        {/* PANEL VISUAL */}
         <section className="auth-visual register-visual">
-
-          <Link
-            to="/"
-            className="auth-brand"
-          >
+          <Link to="/" className="auth-brand">
             <span className="auth-brand-main">
               BULK<b>WAY</b>
             </span>
@@ -100,7 +64,6 @@ function Registro() {
           </Link>
 
           <div className="auth-visual-content">
-
             <p className="auth-eyebrow">
               INCORPORACIÓN AL SISTEMA
             </p>
@@ -112,43 +75,27 @@ function Registro() {
             </h1>
 
             <p className="auth-visual-copy">
-              Crea tu acceso a BulkWay y trabaja con la información
-              que necesitas según el papel que desempeñas dentro
-              de la operación empresarial.
+              Crea tu acceso de cliente a BulkWay y consulta la
+              información relacionada con tus pedidos y productos.
             </p>
 
             <div className="register-role-preview">
-
               <div className="register-preview-icon">
-                <i
-                  className={
-                    rol === 'cliente'
-                      ? 'bi bi-person-badge'
-                      : 'bi bi-truck'
-                  }
-                ></i>
+                <i className="bi bi-person-badge"></i>
               </div>
 
               <div>
                 <span>ACCESO SELECCIONADO</span>
 
-                <strong>
-                  {rol === 'cliente'
-                    ? 'Cliente'
-                    : 'Conductor'}
-                </strong>
+                <strong>Cliente</strong>
 
                 <p>
-                  {rol === 'cliente'
-                    ? 'Consulta tus pedidos y productos disponibles.'
-                    : 'Gestiona rutas y entregas asignadas.'}
+                  Consulta tus pedidos y productos disponibles.
                 </p>
               </div>
-
             </div>
 
             <div className="register-feature-list">
-
               <div>
                 <i className="bi bi-shield-check"></i>
                 <span>Acceso protegido</span>
@@ -163,13 +110,10 @@ function Registro() {
                 <i className="bi bi-lightning-charge"></i>
                 <span>Operación centralizada</span>
               </div>
-
             </div>
-
           </div>
 
           <div className="auth-visual-footer">
-
             <span>
               <i className="bi bi-lock"></i>
               Registro seguro
@@ -179,26 +123,17 @@ function Registro() {
               <i className="bi bi-check2-circle"></i>
               Configuración empresarial
             </span>
-
           </div>
-
         </section>
 
-        {/* PANEL DE REGISTRO */}
         <main className="auth-login-panel register-panel">
-
           <div className="auth-login-inner">
-
-            <Link
-              to="/login"
-              className="auth-back"
-            >
+            <Link to="/login" className="auth-back">
               <i className="bi bi-arrow-left"></i>
               Volver al acceso
             </Link>
 
             <div className="login-heading">
-
               <div className="login-icon">
                 <i className="bi bi-person-plus"></i>
               </div>
@@ -212,30 +147,18 @@ function Registro() {
               </h2>
 
               <p className="auth-copy">
-                Selecciona el tipo de acceso que corresponde a tu
-                función y completa tus datos para crear la cuenta.
+                Completa tus datos para crear tu cuenta de cliente
+                y acceder a la plataforma.
               </p>
-
             </div>
 
-            {/* SELECTOR DE ROL */}
             <div className="register-role-section">
-
               <label className="register-section-label">
                 Tipo de cuenta
               </label>
 
               <div className="register-role-grid">
-
-                <button
-                  type="button"
-                  className={`register-role-card ${
-                    rol === 'cliente'
-                      ? 'active'
-                      : ''
-                  }`}
-                  onClick={() => cambiarRol('cliente')}
-                >
+                <div className="register-role-card active">
                   <span className="register-role-icon">
                     <i className="bi bi-person-badge"></i>
                   </span>
@@ -251,111 +174,71 @@ function Registro() {
                   <span className="register-role-check">
                     <i className="bi bi-check2"></i>
                   </span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`register-role-card ${
-                    rol === 'conductor'
-                      ? 'active'
-                      : ''
-                  }`}
-                  onClick={() => cambiarRol('conductor')}
-                >
-                  <span className="register-role-icon">
-                    <i className="bi bi-truck"></i>
-                  </span>
-
-                  <span className="register-role-content">
-                    <strong>Conductor</strong>
-
-                    <small>
-                      Gestiona rutas y entregas.
-                    </small>
-                  </span>
-
-                  <span className="register-role-check">
-                    <i className="bi bi-check2"></i>
-                  </span>
-                </button>
-
+                </div>
               </div>
-
             </div>
 
-            {/* FORMULARIO */}
             <form
               className="auth-form register-form"
               onSubmit={registrarUsuario}
             >
-
               <div className="auth-field">
-
                 <label htmlFor="nombre">
                   Nombre completo
                 </label>
 
                 <div className="auth-input-wrap">
-
                   <i className="bi bi-person"></i>
 
                   <input
                     id="nombre"
                     type="text"
                     value={nombre}
-                    onChange={(e) =>
+                    onChange={e =>
                       setNombre(e.target.value)
                     }
                     placeholder="Tu nombre completo"
                     autoComplete="name"
                     required
                   />
-
                 </div>
-
               </div>
 
               <div className="auth-field">
-
                 <label htmlFor="registro-email">
                   Correo electrónico
                 </label>
 
                 <div className="auth-input-wrap">
-
                   <i className="bi bi-envelope"></i>
 
                   <input
                     id="registro-email"
                     type="email"
                     value={email}
-                    onChange={(e) =>
+                    onChange={e =>
                       setEmail(e.target.value)
                     }
                     placeholder="correo@ejemplo.com"
                     autoComplete="email"
                     required
                   />
-
                 </div>
-
               </div>
 
               <div className="auth-field">
-
                 <label htmlFor="registro-password">
                   Contraseña
                 </label>
 
                 <div className="auth-input-wrap">
-
                   <i className="bi bi-lock"></i>
 
                   <input
                     id="registro-password"
                     type="password"
                     value={password}
-                    onChange={(e) =>
+                    onChange={e =>
                       setPassword(e.target.value)
                     }
                     placeholder="Mínimo 6 caracteres"
@@ -363,22 +246,16 @@ function Registro() {
                     minLength={6}
                     required
                   />
-
                 </div>
-
               </div>
 
               <div className="register-selected-role">
-
                 <i className="bi bi-info-circle"></i>
 
                 <span>
                   Crearás una cuenta como{' '}
-                  <strong>
-                    {nombresRol[rol]}
-                  </strong>.
+                  <strong>cliente</strong>.
                 </span>
-
               </div>
 
               <button
@@ -398,7 +275,6 @@ function Registro() {
                   </>
                 )}
               </button>
-
             </form>
 
             {mensaje && (
@@ -413,7 +289,6 @@ function Registro() {
             </div>
 
             <div className="auth-info-card">
-
               <div className="auth-info-icon">
                 <i className="bi bi-shield-lock"></i>
               </div>
@@ -424,16 +299,14 @@ function Registro() {
                 </strong>
 
                 <p>
-                  Tu cuenta se registra mediante Supabase y
-                  queda asociada al tipo de acceso seleccionado.
+                  Las cuentas de conductores son creadas
+                  directamente por el administrador.
                 </p>
               </div>
-
             </div>
 
             <p className="auth-link">
-              ¿Ya tienes una cuenta?
-              {' '}
+              ¿Ya tienes una cuenta?{' '}
               <Link to="/login">
                 Iniciar sesión
               </Link>
@@ -442,11 +315,8 @@ function Registro() {
             <p className="auth-copyright">
               © 2026 BulkWay · Gestión empresarial
             </p>
-
           </div>
-
         </main>
-
       </div>
     </div>
   )
