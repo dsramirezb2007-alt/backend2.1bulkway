@@ -8,7 +8,7 @@
     "dev": "node --watch src/index.js"
   },
   "keywords": [],
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "express": "^5.2.1"
   }

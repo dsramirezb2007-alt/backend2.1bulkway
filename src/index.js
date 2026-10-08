@@ -1,4 +1,5 @@
-const express = require('express');
+import express from 'express';
+//const express = require('express'); ---->> "type": "commonjs",
 const app = express();
 
 const port = 3000;
