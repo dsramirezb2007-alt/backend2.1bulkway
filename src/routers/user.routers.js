@@ -1,27 +1,18 @@
-import { Router } from "express";
+import { Router } from 'express';
+import { 
+    actualizarUsers,
+ eliminarUsers, 
+    getUsers, 
+PropiedadesUsers, registrarUsers } from "../controllers/users.controllers.js";
 
 const router = Router();
 
-// 1. Corregido: res.json (tenías res.jso)
-router.get('/users', (req, res) => {
-    res.json({ msg: 'Obtiene todos los usuarios' });
-});
 
-router.post('/users', (req, res) => {
-    res.json({ msg: 'Registra usuario' });
-});
+router.get('/', getUsers);
+router.post('/', registrarUsers);
+router.put('/', actualizarUsers);
+router.patch('/', PropiedadesUsers);
 
-router.put('/users/:id', (req, res) => {
-    res.json({ msg: 'Actualizar todas las propiedades de un usuario' });
-});
+router.delete('/', eliminarUsers);
 
-router.patch('/users/:id', (req, res) => {
-    res.json({ msg: 'Actualizar una o más propiedades del usuario' });
-});
-
-router.delete('/users/:id', (req, res) => {
-    res.json({ msg: 'Elimina un usuario' });
-});
-
-// 2. Se mantiene únicamente una exportación al final del archivo
 export default router;
