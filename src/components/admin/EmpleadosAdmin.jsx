@@ -4,6 +4,7 @@ import { apiRequest } from '../../services/api'
 import { supabase } from '../../services/supabase'
 
 import Modal from '../shared/Modal'
+import ConfirmModal from '../shared/ConfirmModal'
 
 const formularioInicial = {
   nombre: '',
@@ -11,6 +12,7 @@ const formularioInicial = {
   telefono: '',
   correo: '',
   zona: '',
+  estado: 'Activo',
 }
 
 function EmpleadosAdmin() {
@@ -19,14 +21,17 @@ function EmpleadosAdmin() {
   const [guardando, setGuardando] = useState(false)
   const [open, setOpen] = useState(false)
   const [mensaje, setMensaje] = useState('')
-  const [form, setForm] = useState(formularioInicial)
+  const [empleadoPorEliminar, setEmpleadoPorEliminar] = useState(null)
+  const [empleadoEditando, setEmpleadoEditando] = useState(null)
+  const [form, setForm] = useState({ ...formularioInicial })
 
   const cargarEmpleados = async () => {
     try {
       setCargando(true)
-      setMensaje('')
 
-      const data = await apiRequest('/conductores')
+      const data = await apiRequest('/conductores', {
+        api: 'express',
+      })
 
       setEmpleados(Array.isArray(data) ? data : [])
     } catch (error) {
@@ -43,7 +48,24 @@ function EmpleadosAdmin() {
   }, [])
 
   const abrirNuevo = () => {
-    setForm(formularioInicial)
+    setEmpleadoEditando(null)
+    setForm({ ...formularioInicial })
+    setMensaje('')
+    setOpen(true)
+  }
+
+  const abrirEditar = (empleado) => {
+    setEmpleadoEditando(empleado)
+
+    setForm({
+      nombre: empleado.nombre || '',
+      cedula: empleado.cedula || '',
+      telefono: empleado.telefono || '',
+      correo: empleado.correo || '',
+      zona: empleado.zona || '',
+      estado: empleado.estado || 'Activo',
+    })
+
     setMensaje('')
     setOpen(true)
   }
@@ -52,20 +74,20 @@ function EmpleadosAdmin() {
     if (guardando) return
 
     setOpen(false)
-    setForm(formularioInicial)
+    setForm({ ...formularioInicial })
+    setEmpleadoEditando(null)
     setMensaje('')
   }
 
   const cambiarCampo = (campo, valor) => {
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       [campo]: valor,
     }))
   }
 
-  const guardar = async e => {
+  const guardar = async (e) => {
     e.preventDefault()
-
     setMensaje('')
 
     if (!form.nombre.trim()) {
@@ -101,13 +123,37 @@ function EmpleadosAdmin() {
     try {
       setGuardando(true)
 
+      if (empleadoEditando) {
+        await apiRequest(`/conductores/${empleadoEditando.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            nombre: form.nombre.trim(),
+            cedula: form.cedula.trim(),
+            telefono: form.telefono.trim(),
+            correo: form.correo.trim(),
+            zona: form.zona.trim(),
+            estado: form.estado.trim(),
+          }),
+          api: 'express',
+        })
+
+        setOpen(false)
+        setForm({ ...formularioInicial })
+        setEmpleadoEditando(null)
+        setMensaje('Conductor actualizado correctamente.')
+
+        await cargarEmpleados()
+        return
+      }
+
       const {
         data: { session },
         error: sessionError,
       } = await supabase.auth.getSession()
 
-      console.log('SESION ACTUAL:', session)
-      console.log('ERROR SESION:', sessionError)
+      if (sessionError) {
+        throw sessionError
+      }
 
       if (!session?.access_token) {
         setMensaje('La sesión del administrador no está disponible.')
@@ -130,16 +176,19 @@ function EmpleadosAdmin() {
       if (error) {
         console.error('Error de Edge Function:', error)
 
-        let mensajeError = error.message || 'No fue posible crear el conductor.'
+        let mensajeError = 'No fue posible crear el conductor.'
 
         if (error.context) {
           try {
-            const respuesta = await error.context.json()
+            const respuesta = await error.context.clone().json()
 
-            if (respuesta?.error) {
-              mensajeError = respuesta.error
-            }
-          } catch {}
+            mensajeError =
+              respuesta?.error ||
+              respuesta?.message ||
+              mensajeError
+          } catch {
+            mensajeError = 'No fue posible crear el conductor.'
+          }
         }
 
         setMensaje(mensajeError)
@@ -161,54 +210,58 @@ function EmpleadosAdmin() {
         telefono: form.telefono.trim(),
         correo: form.correo.trim(),
         zona: form.zona.trim(),
-        estado: 'Activo',
+        estado: form.estado.trim(),
       }
 
       await apiRequest('/conductores', {
         method: 'POST',
         body: JSON.stringify(nuevoConductor),
+        api: 'express',
       })
 
-      await cargarEmpleados()
-
-      setForm(formularioInicial)
       setOpen(false)
-
+      setForm({ ...formularioInicial })
+      setEmpleadoEditando(null)
       setMensaje(
         `El conductor ${nuevoConductor.nombre} fue registrado correctamente. Se envió una invitación a ${nuevoConductor.correo}.`
       )
+
+      await cargarEmpleados()
     } catch (error) {
       console.error(error)
-
       setMensaje(
-        error?.message ||
-          'No fue posible registrar el conductor.'
+        error?.message || 'No fue posible guardar el conductor.'
       )
     } finally {
       setGuardando(false)
     }
   }
 
-  const eliminar = async empleado => {
-    const confirmar = window.confirm(
-      `¿Estás seguro de eliminar a ${empleado.nombre}?`
-    )
+  const eliminar = (empleado) => {
+    setMensaje('')
+    setEmpleadoPorEliminar(empleado)
+  }
 
-    if (!confirmar) return
+  const confirmarEliminacion = async () => {
+    if (!empleadoPorEliminar) return
 
     try {
       setMensaje('')
 
-      await apiRequest(`/conductores/${empleado.id}`, {
+      await apiRequest(`/conductores/${empleadoPorEliminar.id}`, {
         method: 'DELETE',
+        api: 'express',
       })
 
-      await cargarEmpleados()
-
+      setEmpleadoPorEliminar(null)
       setMensaje('Conductor eliminado correctamente.')
+      await cargarEmpleados()
     } catch (error) {
       console.error(error)
-      setMensaje('No fue posible eliminar el conductor.')
+      setEmpleadoPorEliminar(null)
+      setMensaje(
+        error?.message || 'No fue posible eliminar el conductor.'
+      )
     }
   }
 
@@ -232,7 +285,7 @@ function EmpleadosAdmin() {
         </div>
 
         {mensaje && (
-          <div className="auth-message">
+          <div className="auth-message" role="status">
             {mensaje}
           </div>
         )}
@@ -263,7 +316,7 @@ function EmpleadosAdmin() {
           </div>
         ) : (
           <div className="employee-grid">
-            {empleados.map(empleado => (
+            {empleados.map((empleado) => (
               <article
                 className="employee-card"
                 key={empleado.id}
@@ -274,9 +327,7 @@ function EmpleadosAdmin() {
 
                 <h3>{empleado.nombre}</h3>
 
-                <p>
-                  Conductor · {empleado.zona}
-                </p>
+                <p>Conductor · {empleado.zona}</p>
 
                 <p>
                   <i className="bi bi-credit-card" />{' '}
@@ -293,11 +344,26 @@ function EmpleadosAdmin() {
                   {empleado.correo}
                 </p>
 
-                <span className="status success">
+                <span
+                  className={`status ${
+                    (empleado.estado || 'Activo') === 'Activo'
+                      ? 'success'
+                      : 'warning'
+                  }`}
+                >
                   {empleado.estado || 'Activo'}
                 </span>
 
                 <div className="route-actions">
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary"
+                    onClick={() => abrirEditar(empleado)}
+                  >
+                    <i className="bi bi-pencil-square" />
+                    Editar
+                  </button>
+
                   <button
                     type="button"
                     className="btn btn-outline-danger"
@@ -315,75 +381,73 @@ function EmpleadosAdmin() {
 
       <Modal
         open={open}
-        title="Nuevo conductor"
+        title={empleadoEditando ? 'Editar conductor' : 'Nuevo conductor'}
         onClose={cerrarModal}
       >
-        <form
-          className="modal-form"
-          onSubmit={guardar}
-        >
-          <label>Nombre completo</label>
-
+        <form className="modal-form" onSubmit={guardar}>
+          <label htmlFor="conductor-nombre">Nombre completo</label>
           <input
+            id="conductor-nombre"
             type="text"
             placeholder="Ej. Juan Pérez"
             value={form.nombre}
-            onChange={e =>
-              cambiarCampo('nombre', e.target.value)
-            }
+            onChange={(e) => cambiarCampo('nombre', e.target.value)}
             required
           />
 
-          <label>Cédula</label>
-
+          <label htmlFor="conductor-cedula">Cédula</label>
           <input
+            id="conductor-cedula"
             type="text"
             placeholder="Ej. 1020304050"
             value={form.cedula}
-            onChange={e =>
-              cambiarCampo('cedula', e.target.value)
-            }
+            onChange={(e) => cambiarCampo('cedula', e.target.value)}
             required
           />
 
-          <label>Teléfono</label>
-
+          <label htmlFor="conductor-telefono">Teléfono</label>
           <input
+            id="conductor-telefono"
             type="text"
             placeholder="Ej. 3001234567"
             value={form.telefono}
-            onChange={e =>
-              cambiarCampo('telefono', e.target.value)
-            }
+            onChange={(e) => cambiarCampo('telefono', e.target.value)}
             required
           />
 
-          <label>Correo electrónico</label>
-
+          <label htmlFor="conductor-correo">Correo electrónico</label>
           <input
+            id="conductor-correo"
             type="email"
             placeholder="Ej. juan@empresa.com"
             value={form.correo}
-            onChange={e =>
-              cambiarCampo('correo', e.target.value)
-            }
+            onChange={(e) => cambiarCampo('correo', e.target.value)}
             required
           />
 
-          <label>Zona</label>
-
+          <label htmlFor="conductor-zona">Zona</label>
           <input
+            id="conductor-zona"
             type="text"
             placeholder="Ej. Bogotá Norte"
             value={form.zona}
-            onChange={e =>
-              cambiarCampo('zona', e.target.value)
-            }
+            onChange={(e) => cambiarCampo('zona', e.target.value)}
             required
           />
 
+          <label htmlFor="conductor-estado">Estado</label>
+          <select
+            id="conductor-estado"
+            value={form.estado}
+            onChange={(e) => cambiarCampo('estado', e.target.value)}
+            required
+          >
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+
           {mensaje && (
-            <div className="auth-message error">
+            <div className="auth-message error" role="alert">
               {mensaje}
             </div>
           )}
@@ -394,13 +458,29 @@ function EmpleadosAdmin() {
             disabled={guardando}
           >
             <i className="bi bi-check2-circle" />
-
             {guardando
-              ? 'Creando conductor...'
-              : 'Guardar conductor'}
+              ? 'Guardando...'
+              : empleadoEditando
+                ? 'Guardar cambios'
+                : 'Guardar conductor'}
           </button>
         </form>
       </Modal>
+
+      <ConfirmModal
+        open={Boolean(empleadoPorEliminar)}
+        title="Eliminar conductor"
+        message={
+          empleadoPorEliminar
+            ? `¿Estás seguro de que deseas eliminar a ${empleadoPorEliminar.nombre}? Esta acción no se puede deshacer.`
+            : ''
+        }
+        confirmText="Sí, eliminar conductor"
+        cancelText="Cancelar"
+        onConfirm={confirmarEliminacion}
+        onClose={() => setEmpleadoPorEliminar(null)}
+        danger
+      />
     </>
   )
 }
