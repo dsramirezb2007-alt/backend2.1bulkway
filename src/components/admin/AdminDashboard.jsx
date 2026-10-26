@@ -10,12 +10,14 @@ import FacturacionAdmin from './FacturacionAdmin'
 import EmpleadosAdmin from './EmpleadosAdmin'
 import RutasAdmin from './RutasAdmin'
 import InventarioAdmin from './InventarioAdmin'
+import SolicitudesAdmin from './SolicitudesAdmin'
 
 import { apiRequest } from '../../services/api'
 
 const menu = [
   { id: 'inicio', label: 'Resumen', icon: 'bi-grid-1x2' },
   { id: 'pedidos', label: 'Pedidos', icon: 'bi-box-seam' },
+  { id: 'solicitudes', label: 'Solicitudes', icon: 'bi-clipboard-check' },
   { id: 'clientes', label: 'Clientes', icon: 'bi-people' },
   { id: 'productos', label: 'Productos', icon: 'bi-basket3' },
   { id: 'inventario', label: 'Inventario', icon: 'bi-boxes' },
@@ -319,6 +321,7 @@ function AdminDashboard() {
     ),
 
     pedidos: <PedidosAdmin />,
+    solicitudes: <SolicitudesAdmin />,
     clientes: <ClientesAdmin />,
     productos: <ProductosAdmin />,
     inventario: <InventarioAdmin />,

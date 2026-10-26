@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { apiRequest } from '../../services/api'
 
 function InventarioAdmin() {
@@ -22,8 +22,8 @@ function InventarioAdmin() {
       setMensaje('')
 
       const [productosData, movimientosData] = await Promise.all([
-        apiRequest('/productos'),
-        apiRequest('/inventario'),
+        apiRequest('/productos', { api: 'express' }),
+        apiRequest('/inventario', { api: 'express' }),
       ])
 
       setProductos(productosData)
@@ -68,7 +68,7 @@ function InventarioAdmin() {
     )
 
     if (!producto) {
-      setMensaje('No se encontró el producto seleccionado.')
+      setMensaje('No se encontrÃ³ el producto seleccionado.')
       return
     }
 
@@ -105,13 +105,7 @@ function InventarioAdmin() {
       await apiRequest('/inventario', {
         method: 'POST',
         body: JSON.stringify(movimiento),
-      })
-
-      await apiRequest(`/productos/${producto.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          stock: stockNuevo,
-        }),
+        api: 'express',
       })
 
       setForm({
@@ -191,7 +185,7 @@ function InventarioAdmin() {
                       key={producto.id}
                       value={producto.id}
                     >
-                      {producto.nombre} — Stock: {producto.stock}
+                      {producto.nombre} â€” Stock: {producto.stock}
                     </option>
                   ))}
                 </select>
@@ -208,11 +202,11 @@ function InventarioAdmin() {
                   }
                 >
                   <option value="entrada">
-                    Entrada de mercancía
+                    Entrada de mercancÃ­a
                   </option>
 
                   <option value="salida">
-                    Salida de mercancía
+                    Salida de mercancÃ­a
                   </option>
                 </select>
 
@@ -243,7 +237,7 @@ function InventarioAdmin() {
                       motivo: e.target.value,
                     })
                   }
-                  placeholder="Ej. Compra de mercancía"
+                  placeholder="Ej. Compra de mercancÃ­a"
                   required
                 />
 
@@ -286,7 +280,7 @@ function InventarioAdmin() {
                         <strong>{producto.nombre}</strong>
 
                         <span>
-                          {producto.categoria || 'Sin categoría'}
+                          {producto.categoria || 'Sin categorÃ­a'}
                         </span>
                       </div>
 
@@ -313,11 +307,11 @@ function InventarioAdmin() {
               <div className="dashboard-empty">
                 <i className="bi bi-clock-history" />
 
-                <h3>No hay movimientos todavía</h3>
+                <h3>No hay movimientos todavÃ­a</h3>
 
                 <p>
-                  Los movimientos de entrada y salida aparecerán
-                  aquí.
+                  Los movimientos de entrada y salida aparecerÃ¡n
+                  aquÃ­.
                 </p>
               </div>
             ) : (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../../services/api'
 import Modal from '../shared/Modal'
+import ConfirmModal from '../shared/ConfirmModal'
 
 const clienteInicial = {
   nombre: '',
@@ -19,6 +20,7 @@ function ClientesAdmin() {
   const [cargando, setCargando] = useState(true)
   const [modalAbierto, setModalAbierto] = useState(false)
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
+  const [clientePorEliminar, setClientePorEliminar] = useState(null)
   const [formulario, setFormulario] = useState(clienteInicial)
   const [busqueda, setBusqueda] = useState('')
   const [mensaje, setMensaje] = useState('')
@@ -28,8 +30,8 @@ function ClientesAdmin() {
       setCargando(true)
 
       const [clientesData, pedidosData] = await Promise.all([
-        apiRequest('/clientes'),
-        apiRequest('/pedidos'),
+        apiRequest('/clientes', { api: 'express' }),
+        apiRequest('/pedidos', { api: 'express' }),
       ])
 
       setClientes(clientesData || [])
@@ -91,6 +93,7 @@ function ClientesAdmin() {
         await apiRequest(`/clientes/${clienteSeleccionado.id}`, {
           method: 'PATCH',
           body: JSON.stringify(formulario),
+          api: 'express',
         })
       } else {
         const nuevoCliente = {
@@ -102,6 +105,7 @@ function ClientesAdmin() {
         await apiRequest('/clientes', {
           method: 'POST',
           body: JSON.stringify(nuevoCliente),
+          api: 'express',
         })
       }
 
@@ -121,26 +125,31 @@ function ClientesAdmin() {
     )
 
     if (tienePedidos) {
-      alert(
+      setMensaje(
         'No puedes eliminar este cliente porque tiene pedidos asociados.'
       )
       return
     }
 
-    const confirmar = window.confirm(
-      `¿Deseas eliminar a ${cliente.nombre}?`
-    )
+    setMensaje('')
+    setClientePorEliminar(cliente)
+  }
 
-    if (!confirmar) return
+  const confirmarEliminacionCliente = async () => {
+    if (!clientePorEliminar) return
 
     try {
-      await apiRequest(`/clientes/${cliente.id}`, {
+      await apiRequest(`/clientes/${clientePorEliminar.id}`, {
         method: 'DELETE',
+        api: 'express',
       })
 
+      setClientePorEliminar(null)
+      setMensaje('')
       await cargarDatos()
     } catch (error) {
       console.error(error)
+      setClientePorEliminar(null)
       setMensaje('No fue posible eliminar el cliente.')
     }
   }
@@ -440,7 +449,22 @@ function ClientesAdmin() {
             </button>
           </div>
         </form>
-      </Modal>
+        </Modal>
+
+      <ConfirmModal
+        open={Boolean(clientePorEliminar)}
+        title="Eliminar cliente"
+        message={
+          clientePorEliminar
+            ? `¿Estás seguro de que deseas eliminar a ${clientePorEliminar.nombre}? Esta acción no se puede deshacer.`
+            : ''
+        }
+        confirmText="Sí, eliminar cliente"
+        cancelText="Cancelar"
+        onConfirm={confirmarEliminacionCliente}
+        onClose={() => setClientePorEliminar(null)}
+        danger
+      />
     </section>
   )
 }

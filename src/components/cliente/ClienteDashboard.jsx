@@ -77,7 +77,7 @@ function ClienteDashboard() {
       const resultados = await Promise.allSettled([
         apiRequest('/productos'),
         apiRequest('/pedidos'),
-        apiRequest('/solicitudes'),
+        apiRequest('/solicitudes', { api: 'express' }),
       ])
 
       const productosData =
@@ -411,6 +411,7 @@ function ClienteDashboard() {
       await apiRequest('/solicitudes', {
         method: 'POST',
         body: JSON.stringify(solicitud),
+        api: 'express',
       })
 
       setCarrito([])

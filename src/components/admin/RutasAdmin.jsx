@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../services/api'
 import Modal from '../shared/Modal'
+import ConfirmModal from '../shared/ConfirmModal'
 
 const empty = {
   nombre: '',
@@ -20,6 +21,7 @@ function RutasAdmin() {
   const [editing, setEditing] = useState(null)
   const [open, setOpen] = useState(false)
   const [mensaje, setMensaje] = useState('')
+  const [rutaPorEliminar, setRutaPorEliminar] = useState(null)
 
   const cargarDatos = async () => {
     try {
@@ -27,9 +29,9 @@ function RutasAdmin() {
       setMensaje('')
 
       const resultados = await Promise.allSettled([
-        apiRequest('/rutas'),
-        apiRequest('/pedidos'),
-        apiRequest('/conductores'),
+        apiRequest('/rutas', { api: 'express' }),
+        apiRequest('/pedidos', { api: 'express' }),
+        apiRequest('/conductores', { api: 'express' }),
       ])
 
       const rutasData =
@@ -227,12 +229,15 @@ function RutasAdmin() {
     try {
       setGuardando(true)
 
+      await cargarDatos()
+
       let rutaGuardada
 
       if (editing) {
         rutaGuardada = await apiRequest(`/rutas/${editing}`, {
           method: 'PATCH',
           body: JSON.stringify(ruta),
+          api: 'express',
         })
       } else {
         rutaGuardada = await apiRequest('/rutas', {
@@ -241,42 +246,10 @@ function RutasAdmin() {
             ...ruta,
             fechaCreacion: new Date().toISOString(),
           }),
+          api: 'express',
         })
       }
 
-      const pedidosRutaAnterior = editing
-        ? pedidos.filter(
-            pedido =>
-              pedido.ruta ===
-              rutas.find(rutaItem => String(rutaItem.id) === String(editing))
-                ?.nombre
-          )
-        : []
-
-      for (const pedido of pedidosRutaAnterior) {
-        if (!form.pedidos.map(String).includes(String(pedido.id))) {
-          await apiRequest(`/pedidos/${pedido.id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({
-              conductor: 'Sin asignar',
-              ruta: 'Sin asignar',
-              estado:
-                pedido.estado === 'En ruta' ? 'Publicado' : pedido.estado,
-            }),
-          })
-        }
-      }
-
-      for (const pedido of pedidosSeleccionados) {
-        await apiRequest(`/pedidos/${pedido.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({
-            conductor: form.conductor,
-            ruta: form.nombre.trim(),
-            estado: form.estado === 'Entregada' ? 'Entregado' : 'En ruta',
-          }),
-        })
-      }
 
       await cargarDatos()
       cerrarModal()
@@ -286,10 +259,10 @@ function RutasAdmin() {
           ? `Ruta ${rutaGuardada?.nombre || form.nombre} actualizada correctamente.`
           : `Ruta ${rutaGuardada?.nombre || form.nombre} creada correctamente.`
       )
-    } catch (error) {
-      console.error(error)
-      setMensaje('No fue posible guardar la ruta.')
-    } finally {
+      } catch (error) {
+        console.error(error)
+        setMensaje(error.message || 'No fue posible guardar la ruta.')
+      } finally {
       setGuardando(false)
     }
   }
@@ -338,43 +311,31 @@ function RutasAdmin() {
     }
   }
 
-  const eliminar = async ruta => {
-    const confirmar = window.confirm(
-      `¿Estás seguro de eliminar la ruta "${ruta.nombre}"?`
-    )
+    const eliminar = (ruta) => {
+    setMensaje('')
+    setRutaPorEliminar(ruta)
+  }
 
-    if (!confirmar) return
+  const confirmarEliminacionRuta = async () => {
+    if (!rutaPorEliminar) return
 
     try {
       setMensaje('')
 
-      const pedidosRuta = pedidos.filter(pedido =>
-        Array.isArray(ruta.pedidos)
-          ? ruta.pedidos.map(String).includes(String(pedido.id))
-          : pedido.ruta === ruta.nombre
-      )
-
-      for (const pedido of pedidosRuta) {
-        await apiRequest(`/pedidos/${pedido.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({
-            conductor: 'Sin asignar',
-            ruta: 'Sin asignar',
-            estado:
-              pedido.estado === 'En ruta' ? 'Publicado' : pedido.estado,
-          }),
-        })
-      }
-
-      await apiRequest(`/rutas/${ruta.id}`, {
+      await apiRequest(`/rutas/${rutaPorEliminar.id}`, {
         method: 'DELETE',
+        api: 'express',
       })
 
+      setRutaPorEliminar(null)
       await cargarDatos()
       setMensaje('Ruta eliminada correctamente.')
     } catch (error) {
       console.error(error)
-      setMensaje('No fue posible eliminar la ruta.')
+      setRutaPorEliminar(null)
+      setMensaje(
+        error.message || 'No fue posible eliminar la ruta.'
+      )
     }
   }
 
@@ -789,8 +750,23 @@ function RutasAdmin() {
                 ? 'Guardar cambios'
                 : 'Crear ruta'}
           </button>
-        </form>
+          </form>
       </Modal>
+
+      <ConfirmModal
+        open={Boolean(rutaPorEliminar)}
+        title="Eliminar ruta"
+        message={
+          rutaPorEliminar
+            ? `¿Estás seguro de que deseas eliminar la ruta "${rutaPorEliminar.nombre}"? Esta acción no se puede deshacer.`
+            : ''
+        }
+        confirmText="Sí, eliminar ruta"
+        cancelText="Cancelar"
+        onConfirm={confirmarEliminacionRuta}
+        onClose={() => setRutaPorEliminar(null)}
+        danger
+      />
     </>
   )
 }

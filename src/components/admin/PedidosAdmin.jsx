@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { apiRequest } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import Modal from '../shared/Modal'
+import ConfirmModal from '../shared/ConfirmModal'
 
 const empty = {
   clienteId: '',
@@ -24,6 +25,7 @@ function PedidosAdmin() {
   const [editing, setEditing] = useState(null)
   const [open, setOpen] = useState(false)
   const [mensaje, setMensaje] = useState('')
+  const [pedidoPorEliminar, setPedidoPorEliminar] = useState(null)
 
   const cargarDatos = async () => {
     try {
@@ -265,24 +267,29 @@ function PedidosAdmin() {
     }
   }
 
-  const eliminar = async (pedido) => {
-    const confirmar = window.confirm(
-      `¿Estás seguro de eliminar el pedido ${pedido.id}?`
-    )
+    const eliminar = (pedido) => {
+    setMensaje('')
+    setPedidoPorEliminar(pedido)
+  }
 
-    if (!confirmar) return
+  const confirmarEliminacionPedido = async () => {
+    if (!pedidoPorEliminar) return
 
     try {
       setMensaje('')
 
-      await apiRequest(`/pedidos/${pedido.id}`, {
+      await apiRequest(`/pedidos/${pedidoPorEliminar.id}`, {
         method: 'DELETE',
       })
 
+      const pedidoEliminado = pedidoPorEliminar.id
+      setPedidoPorEliminar(null)
+
       await cargarDatos()
-      setMensaje(`Pedido ${pedido.id} eliminado correctamente.`)
+      setMensaje(`Pedido ${pedidoEliminado} eliminado correctamente.`)
     } catch (error) {
       console.error(error)
+      setPedidoPorEliminar(null)
       setMensaje('No fue posible eliminar el pedido.')
     }
   }
@@ -687,7 +694,22 @@ function PedidosAdmin() {
             </button>
           </div>
         </form>
-      </Modal>
+        </Modal>
+
+      <ConfirmModal
+        open={Boolean(pedidoPorEliminar)}
+        title="Eliminar pedido"
+        message={
+          pedidoPorEliminar
+            ? `¿Estás seguro de que deseas eliminar el pedido ${pedidoPorEliminar.id}? Esta acción no se puede deshacer.`
+            : ''
+        }
+        confirmText="Sí, eliminar pedido"
+        cancelText="Cancelar"
+        onConfirm={confirmarEliminacionPedido}
+        onClose={() => setPedidoPorEliminar(null)}
+        danger
+      />
     </section>
   )
 }

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../../services/api'
 import Modal from '../shared/Modal'
+import ConfirmModal from '../shared/ConfirmModal'
 
 function ProductosAdmin() {
   const [productos, setProductos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [mensaje, setMensaje] = useState('')
   const [open, setOpen] = useState(false)
+  const [productoPorEliminar, setProductoPorEliminar] = useState(null)
   const [editing, setEditing] = useState(null)
 
   const [form, setForm] = useState({
@@ -22,7 +24,9 @@ function ProductosAdmin() {
       setCargando(true)
       setMensaje('')
 
-      const data = await apiRequest('/productos')
+      const data = await apiRequest('/productos', {
+        api: 'express',
+      })
       setProductos(data)
     } catch (error) {
       console.error(error)
@@ -96,11 +100,13 @@ function ProductosAdmin() {
         await apiRequest(`/productos/${editing}`, {
           method: 'PATCH',
           body: JSON.stringify(producto),
+          api: 'express',
         })
       } else {
         await apiRequest('/productos', {
           method: 'POST',
           body: JSON.stringify(producto),
+          api: 'express',
         })
       }
 
@@ -112,24 +118,31 @@ function ProductosAdmin() {
     }
   }
 
-  const eliminar = async (producto) => {
-    const confirmar = window.confirm(
-      `¿Estás seguro de eliminar "${producto.nombre}"?`
-    )
+  const eliminar = (producto) => {
+  setMensaje('')
+  setProductoPorEliminar(producto)
+}
 
-    if (!confirmar) return
+const confirmarEliminacionProducto = async () => {
+  if (!productoPorEliminar) return
 
-    try {
-      await apiRequest(`/productos/${producto.id}`, {
-        method: 'DELETE',
-      })
+  try {
+    setMensaje('')
 
-      await cargarProductos()
-    } catch (error) {
-      console.error(error)
-      setMensaje('No fue posible eliminar el producto.')
-    }
+    await apiRequest(`/productos/${productoPorEliminar.id}`, {
+      method: 'DELETE',
+      api: 'express',
+    })
+
+    setProductoPorEliminar(null)
+    await cargarProductos()
+    setMensaje('Producto eliminado correctamente.')
+  } catch (error) {
+    console.error(error)
+    setProductoPorEliminar(null)
+    setMensaje('No fue posible eliminar el producto.')
   }
+}
 
   return (
     <>
@@ -336,7 +349,22 @@ function ProductosAdmin() {
             {editing ? 'Guardar cambios' : 'Crear producto'}
           </button>
         </form>
-      </Modal>
+        </Modal>
+
+      <ConfirmModal
+        open={Boolean(productoPorEliminar)}
+        title="Eliminar producto"
+        message={
+          productoPorEliminar
+            ? `¿Estás seguro de que deseas eliminar el producto "${productoPorEliminar.nombre}"? Esta acción no se puede deshacer.`
+            : ''
+        }
+        confirmText="Sí, eliminar producto"
+        cancelText="Cancelar"
+        onConfirm={confirmarEliminacionProducto}
+        onClose={() => setProductoPorEliminar(null)}
+        danger
+      />
     </>
   )
 }

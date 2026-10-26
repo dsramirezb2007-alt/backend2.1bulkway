@@ -54,6 +54,18 @@ const supabaseAuth = createClient(
   }
 )
 
+const supabaseAdmin = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
+
+
 if (
   !process.env.VITE_SUPABASE_URL ||
   !process.env.VITE_SUPABASE_PUBLISHABLE_KEY
@@ -394,7 +406,11 @@ app.get('/api/productos', (req, res) => {
  */
 
 
-app.get('/api/pedidos', (req, res) => {
+app.get(
+  '/api/pedidos',
+  verificarToken,
+  verificarRol('administrador'),
+  (req, res) => {
   try {
     const db = leerDB()
 
@@ -439,7 +455,11 @@ app.get('/api/pedidos', (req, res) => {
  */
 
 
-app.get('/api/pedidos/:id', (req, res) => {
+app.get(
+  '/api/pedidos/:id',
+  verificarToken,
+  verificarRol('administrador'),
+  (req, res) => {
   try {
     const db = leerDB()
 
@@ -1660,14 +1680,25 @@ app.delete(
  *         description: No fue posible consultar los conductores.
  */
 
-app.get(
-  '/api/conductores',
+app.get('/api/conductores',
+
   verificarToken,
   verificarRol('administrador'),
-  (req, res) => {
+  async (req, res) => {
     try {
-      const db = leerDB();
-      return res.status(200).json(db.conductores || []);
+      const { data, error } = await supabaseAdmin
+        .from('bulkway_conductores')
+        .select('*')
+        .order('nombre', { ascending: true });
+
+      if (error) {
+        console.error('Error consultando conductores:', error);
+        return res.status(500).json({
+          error: 'No fue posible consultar los conductores.',
+        });
+      }
+
+      return res.status(200).json(data || []);
     } catch (error) {
       console.error('Error consultando conductores:', error);
       return res.status(500).json({
@@ -1743,11 +1774,8 @@ app.post(
   '/api/conductores',
   verificarToken,
   verificarRol('administrador'),
-  (req, res) => {
+  async (req, res) => {
     try {
-      const db = leerDB();
-      db.conductores = db.conductores || [];
-
       const {
         id,
         nombre,
@@ -1776,11 +1804,23 @@ app.post(
         });
       }
 
-      const duplicado = db.conductores.some(
+      const { data: existentes, error: consultaError } =
+        await supabaseAdmin
+          .from('bulkway_conductores')
+          .select('id, cedula, correo');
+
+      if (consultaError) {
+        console.error('Error verificando conductores:', consultaError);
+        return res.status(500).json({
+          error: 'No fue posible verificar los conductores.',
+        });
+      }
+
+      const duplicado = (existentes || []).some(
         (conductor) =>
           String(conductor.id) === String(id) ||
-          String(conductor.cedula || '').trim() === cedula.trim() ||
-          String(conductor.correo || '').trim().toLowerCase() ===
+          String(conductor.cedula).trim() === cedula.trim() ||
+          String(conductor.correo).trim().toLowerCase() ===
             correo.trim().toLowerCase()
       );
 
@@ -1800,10 +1840,27 @@ app.post(
         estado: String(estado).trim() || 'Activo',
       };
 
-      db.conductores.push(nuevoConductor);
-      guardarDB(db);
+      const { data, error } = await supabaseAdmin
+        .from('bulkway_conductores')
+        .insert(nuevoConductor)
+        .select()
+        .single();
 
-      return res.status(201).json(nuevoConductor);
+      if (error) {
+        console.error('Error registrando conductor:', error);
+
+        if (error.code === '23505') {
+          return res.status(409).json({
+            error: 'Ya existe un conductor con ese ID, cédula o correo.',
+          });
+        }
+
+        return res.status(500).json({
+          error: 'No fue posible registrar el conductor.',
+        });
+      }
+
+      return res.status(201).json(data);
     } catch (error) {
       console.error('Error registrando conductor:', error);
       return res.status(500).json({
@@ -1874,26 +1931,16 @@ app.post(
  *         description: No fue posible actualizar el conductor.
  */
 
+
 app.patch(
   '/api/conductores/:id',
   verificarToken,
   verificarRol('administrador'),
-  (req, res) => {
+  async (req, res) => {
     try {
-      const db = leerDB();
-      db.conductores = db.conductores || [];
-
-      const conductor = db.conductores.find(
-        (item) => String(item.id) === String(req.params.id)
-      );
-
-      if (!conductor) {
-        return res.status(404).json({
-          error: 'El conductor no existe.',
-        });
-      }
-
+      const id = String(req.params.id);
       const cambios = req.body || {};
+
       const camposPermitidos = [
         'nombre',
         'cedula',
@@ -1902,6 +1949,7 @@ app.patch(
         'zona',
         'estado',
       ];
+
       const campos = Object.keys(cambios);
 
       if (
@@ -1914,25 +1962,85 @@ app.patch(
       }
 
       for (const campo of campos) {
-        if (typeof cambios[campo] !== 'string' || !cambios[campo].trim()) {
+        if (
+          typeof cambios[campo] !== 'string' ||
+          !cambios[campo].trim()
+        ) {
           return res.status(400).json({
             error: `El campo ${campo} debe ser un texto no vacío.`,
           });
         }
       }
 
-      const cedulaNueva = cambios.cedula?.trim();
-      const correoNuevo = cambios.correo?.trim().toLowerCase();
+      const { data: conductor, error: consultaError } =
+        await supabaseAdmin
+          .from('bulkway_conductores')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
 
-      const duplicado = db.conductores.some(
+      if (consultaError) {
+        console.error('Error consultando conductor:', consultaError);
+        return res.status(500).json({
+          error: 'No fue posible consultar el conductor.',
+        });
+      }
+
+      if (!conductor) {
+        return res.status(404).json({
+          error: 'El conductor no existe.',
+        });
+      }
+
+      const actualizados = {
+        ...cambios,
+      };
+
+      if (actualizados.nombre !== undefined) {
+        actualizados.nombre = actualizados.nombre.trim();
+      }
+
+      if (actualizados.cedula !== undefined) {
+        actualizados.cedula = actualizados.cedula.trim();
+      }
+
+      if (actualizados.telefono !== undefined) {
+        actualizados.telefono = actualizados.telefono.trim();
+      }
+
+      if (actualizados.correo !== undefined) {
+        actualizados.correo = actualizados.correo.trim();
+      }
+
+      if (actualizados.zona !== undefined) {
+        actualizados.zona = actualizados.zona.trim();
+      }
+
+      if (actualizados.estado !== undefined) {
+        actualizados.estado = actualizados.estado.trim();
+      }
+
+      const { data: existentes, error: listaError } =
+        await supabaseAdmin
+          .from('bulkway_conductores')
+          .select('id, cedula, correo')
+          .neq('id', id);
+
+      if (listaError) {
+        console.error('Error verificando duplicados:', listaError);
+        return res.status(500).json({
+          error: 'No fue posible verificar los datos del conductor.',
+        });
+      }
+
+      const cedulaNueva = actualizados.cedula;
+      const correoNuevo = actualizados.correo?.toLowerCase();
+
+      const duplicado = (existentes || []).some(
         (otro) =>
-          String(otro.id) !== String(conductor.id) &&
-          (
-            (cedulaNueva &&
-              String(otro.cedula || '').trim() === cedulaNueva) ||
-            (correoNuevo &&
-              String(otro.correo || '').trim().toLowerCase() === correoNuevo)
-          )
+          (cedulaNueva && otro.cedula.trim() === cedulaNueva) ||
+          (correoNuevo &&
+            otro.correo.trim().toLowerCase() === correoNuevo)
       );
 
       if (duplicado) {
@@ -1941,13 +2049,28 @@ app.patch(
         });
       }
 
-      for (const campo of campos) {
-        conductor[campo] = cambios[campo].trim();
+      const { data, error } = await supabaseAdmin
+        .from('bulkway_conductores')
+        .update(actualizados)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error actualizando conductor:', error);
+
+        if (error.code === '23505') {
+          return res.status(409).json({
+            error: 'Otro conductor ya tiene esa cédula o correo.',
+          });
+        }
+
+        return res.status(500).json({
+          error: 'No fue posible actualizar el conductor.',
+        });
       }
 
-      guardarDB(db);
-
-      return res.status(200).json(conductor);
+      return res.status(200).json(data);
     } catch (error) {
       console.error('Error actualizando conductor:', error);
       return res.status(500).json({
@@ -1998,22 +2121,34 @@ app.delete(
   '/api/conductores/:id',
   verificarToken,
   verificarRol('administrador'),
-  (req, res) => {
+  async (req, res) => {
     try {
-      const db = leerDB();
-      db.conductores = db.conductores || [];
+      const id = String(req.params.id);
 
-      const indice = db.conductores.findIndex(
-        (item) => String(item.id) === String(req.params.id)
-      );
+      // Consultar el conductor en Supabase.
+      const { data: conductor, error: consultaError } =
+        await supabaseAdmin
+          .from('bulkway_conductores')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
 
-      if (indice === -1) {
+      if (consultaError) {
+        console.error('Error consultando conductor:', consultaError);
+        return res.status(500).json({
+          error: 'No fue posible consultar el conductor.',
+        });
+      }
+
+      if (!conductor) {
         return res.status(404).json({
           error: 'El conductor no existe.',
         });
       }
 
-      const conductor = db.conductores[indice];
+      // Conservar las comprobaciones de pedidos y rutas en db.json.
+      const db = leerDB();
+
       const nombreConductor = String(conductor.nombre || '')
         .trim()
         .toLowerCase();
@@ -2032,12 +2167,22 @@ app.delete(
 
       if (tienePedidos || tieneRutas) {
         return res.status(409).json({
-          error: 'No se puede eliminar este conductor porque tiene pedidos o rutas asignados.',
+          error:
+            'No se puede eliminar este conductor porque tiene pedidos o rutas asignados.',
         });
       }
 
-      db.conductores.splice(indice, 1);
-      guardarDB(db);
+      const { error: eliminarError } = await supabaseAdmin
+        .from('bulkway_conductores')
+        .delete()
+        .eq('id', id);
+
+      if (eliminarError) {
+        console.error('Error eliminando conductor:', eliminarError);
+        return res.status(500).json({
+          error: 'No fue posible eliminar el conductor.',
+        });
+      }
 
       return res.status(200).json({
         mensaje: 'Conductor eliminado correctamente.',

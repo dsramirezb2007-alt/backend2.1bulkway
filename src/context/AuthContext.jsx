@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-
 import { supabase } from '../services/supabase'
 
 const AuthContext = createContext(null)
@@ -37,11 +36,11 @@ export function AuthProvider({ children }) {
     }
 
     supabase.auth.getSession().then(async ({ data }) => {
-      const user = data.session?.user ?? null
+      const session = data.session ?? null
+      const user = session?.user ?? null
 
       setUsuario(user)
       await cargarPerfil(user)
-
       setCargando(false)
     })
 
