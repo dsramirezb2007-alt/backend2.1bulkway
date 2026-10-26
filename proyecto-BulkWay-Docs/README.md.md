@@ -1,2 +1,0 @@
-# proyecto-BulkWay
-proyecto sena
