@@ -54,11 +54,11 @@ function AdminDashboard() {
         rutas,
         inventario,
       ] = await Promise.all([
-        apiRequest('/pedidos'),
-        apiRequest('/productos'),
-        apiRequest('/conductores'),
-        apiRequest('/rutas'),
-        apiRequest('/inventario'),
+        apiRequest('/pedidos', { api: 'express' }),
+        apiRequest('/productos', { api: 'express' }),
+        apiRequest('/conductores', { api: 'express' }),
+        apiRequest('/rutas', { api: 'express' }),
+        apiRequest('/inventario', { api: 'express' }),
       ])
 
       setResumen({
