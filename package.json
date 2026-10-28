@@ -1,15 +1,35 @@
 {
-  "name": "mi-proyecto-backend",
+  "name": "bulkway",
+  "private": true,
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-    "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --watch src/index.js"
-  },
-  "keywords": [],
   "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "json-server --watch db.json --port 3001",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start:api": "node backend/server.js"
+  },
   "dependencies": {
-    "express": "^5.2.1"
+    "@supabase/functions-js": "^2.117.3",
+    "@supabase/server": "^1.9.1",
+    "@supabase/supabase-js": "^2.116.0",
+    "@vitejs/plugin-react": "latest",
+    "bootstrap": "latest",
+    "bootstrap-icons": "latest",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.7",
+    "express": "^5.2.1",
+    "json-server": "^0.17.4",
+    "jsonwebtoken": "^9.0.3",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "^7.18.3",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "supabase": "^2.120.0"
   }
 }

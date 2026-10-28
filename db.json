@@ -1,0 +1,353 @@
+{
+  "pedidos": [
+    {
+      "id": "BK-201",
+      "fecha": "2026-09-02",
+      "cliente": "Supermercado El Ahorro",
+      "direccion": "Calle 72 #20-15, Bogotá",
+      "cantRopa": 80,
+      "cantLoza": 40,
+      "total": 1384000,
+      "conductor": "Carlos Sierra",
+      "ruta": "Chapinero Norte",
+      "estado": "Publicado",
+      "facturaId": "FAC-1792175022045",
+      "facturado": true
+    },
+    {
+      "id": "BK-202",
+      "fecha": "2026-09-07",
+      "cliente": "Distribuciones La Economía",
+      "direccion": "Carrera 24 #68-40, Bogotá",
+      "cantRopa": 60,
+      "cantLoza": 30,
+      "total": 801000,
+      "conductor": "Carlos Sierra",
+      "ruta": "Chapinero Norte",
+      "estado": "Pendiente"
+    },
+    {
+      "cliente": "Super mercado lider",
+      "direccion": "calle 72 #20-15 norte",
+      "fecha": "2026-09-26",
+      "productoId": "PROD-001",
+      "producto": "Jabón líquido para ropa",
+      "cantidad": 10,
+      "precioUnitario": 12900,
+      "subtotal": 129000,
+      "total": 129000,
+      "estado": "En ruta",
+      "conductor": "juan perez",
+      "ruta": "Ruta Bogotá Norte",
+      "id": "TnH5bYU",
+      "facturaId": "FAC-1790046547928",
+      "facturado": true
+    },
+    {
+      "id": "PED-1791914176248-1",
+      "fecha": "2026-10-13",
+      "cliente": "Cliente",
+      "direccion": "ASDAD",
+      "productoId": "PROD-001",
+      "producto": "Jabón líquido para ropa",
+      "cantidad": 1,
+      "precioUnitario": 12900,
+      "subtotal": 12900,
+      "total": 12900,
+      "estado": "Pendiente",
+      "conductor": "Sin asignar",
+      "ruta": "Sin asignar",
+      "solicitudId": "SOL-1791912396175-1"
+    },
+    {
+      "clienteId": "CLI-002",
+      "cliente": "Distribuciones La Economía",
+      "direccion": "Carrera 24 #68-40, Bogotá",
+      "fecha": "2026-10-21",
+      "productoId": "PROD-006",
+      "producto": "Desinfectante multiusos",
+      "cantidad": 6,
+      "precioUnitario": 11200,
+      "subtotal": 67200,
+      "total": 67200,
+      "estado": "Publicado",
+      "conductor": "Sin asignar",
+      "ruta": "Sin asignar",
+      "id": "_6g3ZTn"
+    }
+  ],
+  "productos": [
+    {
+      "id": "PROD-001",
+      "nombre": "Jabón líquido para ropa",
+      "categoria": "Ropa",
+      "presentacion": "1 L",
+      "stock": 137,
+      "precio": 12900
+    },
+    {
+      "id": "PROD-002",
+      "nombre": "Lavaloza líquido",
+      "categoria": "Cocina",
+      "presentacion": "750 ml",
+      "stock": 95,
+      "precio": 8900
+    },
+    {
+      "id": "PROD-003",
+      "nombre": "Limpiador para pisos",
+      "categoria": "Hogar",
+      "presentacion": "1 L",
+      "stock": 84,
+      "precio": 10500
+    },
+    {
+      "id": "PROD-004",
+      "nombre": "Detergente en polvo",
+      "categoria": "Ropa",
+      "presentacion": "1 kg",
+      "stock": 70,
+      "precio": 11900
+    },
+    {
+      "id": "PROD-005",
+      "nombre": "Jabón corporal líquido",
+      "categoria": "Cuidado personal",
+      "presentacion": "500 ml",
+      "stock": 65,
+      "precio": 9800
+    },
+    {
+      "id": "PROD-006",
+      "nombre": "Desinfectante multiusos",
+      "categoria": "Desinfección",
+      "presentacion": "1 L",
+      "stock": 104,
+      "precio": 11200
+    }
+  ],
+  "clientes": [
+    {
+      "id": "CLI-001",
+      "nombre": "Supermercado El Ahorro",
+      "empresa": "Supermercado El Ahorro",
+      "documento": "900123456-1",
+      "telefono": "3001234567",
+      "correo": "compras@elahorro.com",
+      "direccion": "Calle 72 #20-15, Bogotá",
+      "ciudad": "Bogotá",
+      "estado": "Activo",
+      "fechaRegistro": "2026-09-21"
+    },
+    {
+      "id": "CLI-002",
+      "nombre": "Distribuciones La Economía",
+      "empresa": "Distribuciones La Economía",
+      "documento": "900987654-2",
+      "telefono": "3019876543",
+      "correo": "compras@laeconomia.com",
+      "direccion": "Carrera 24 #68-40, Bogotá",
+      "ciudad": "Bogotá",
+      "estado": "Activo",
+      "fechaRegistro": "2026-09-21"
+    }
+  ],
+  "inventario": [
+    {
+      "productoId": "PROD-001",
+      "producto": "Jabón líquido para ropa",
+      "tipo": "entrada",
+      "cantidad": 10,
+      "stockAnterior": 120,
+      "stockNuevo": 130,
+      "motivo": "Compra de Mercancia",
+      "fecha": "2026-09-21T19:27:09.417Z",
+      "id": 1
+    },
+    {
+      "productoId": "PROD-001",
+      "producto": "Jabón líquido para ropa",
+      "tipo": "salida",
+      "cantidad": 5,
+      "stockAnterior": 130,
+      "stockNuevo": 125,
+      "motivo": "Pedido de prueba",
+      "fecha": "2026-09-21T19:29:06.016Z",
+      "id": 2
+    },
+    {
+      "productoId": "PROD-003",
+      "producto": "Limpiador para pisos",
+      "tipo": "salida",
+      "cantidad": 50,
+      "stockAnterior": 84,
+      "stockNuevo": 34,
+      "motivo": "Pedido 2UE4EgR",
+      "fecha": "2026-09-21T19:48:32.484Z",
+      "id": 3
+    },
+    {
+      "productoId": "PROD-001",
+      "producto": "Jabón líquido para ropa",
+      "tipo": "salida",
+      "cantidad": 10,
+      "stockAnterior": 125,
+      "stockNuevo": 115,
+      "motivo": "Pedido TnH5bYU",
+      "fecha": "2026-09-21T20:42:17.680Z",
+      "id": 4
+    },
+    {
+      "productoId": "PROD-003",
+      "producto": "Limpiador para pisos",
+      "tipo": "entrada",
+      "cantidad": 50,
+      "stockAnterior": 34,
+      "stockNuevo": 84,
+      "motivo": "Entrada de mercancia",
+      "fecha": "2026-09-22T03:59:25.516Z",
+      "id": 5
+    },
+    {
+      "productoId": "PROD-001",
+      "producto": "Jabón líquido para ropa",
+      "tipo": "entrada",
+      "cantidad": 15,
+      "stockAnterior": 115,
+      "stockNuevo": 130,
+      "motivo": "Salida de mercancia",
+      "fecha": "2026-09-22T14:09:35.747Z",
+      "id": 6
+    },
+    {
+      "productoId": "PROD-001",
+      "producto": "Jabón líquido para ropa",
+      "tipo": "salida",
+      "cantidad": 15,
+      "stockAnterior": 130,
+      "stockNuevo": 115,
+      "motivo": "Salida de mercancia",
+      "fecha": "2026-09-22T14:10:43.930Z",
+      "id": 7
+    },
+    {
+      "id": "INV-1791906794766",
+      "productoId": "PROD-001",
+      "producto": "Jabón líquido para ropa",
+      "tipo": "entrada",
+      "cantidad": 2,
+      "stockAnterior": 113,
+      "stockNuevo": 115,
+      "motivo": "Prueba de funcionamiento de Express.",
+      "fecha": "2026-10-13T15:53:14.766Z"
+    },
+    {
+      "id": "INV-1791914176248-1",
+      "productoId": "PROD-001",
+      "producto": "Jabón líquido para ropa",
+      "tipo": "salida",
+      "cantidad": 1,
+      "stockAnterior": 115,
+      "stockNuevo": 114,
+      "motivo": "Solicitud SOL-1791912396175-1 - Pedido PED-1791914176248-1",
+      "fecha": "2026-10-13T17:56:16.248Z"
+    },
+    {
+      "productoId": "PROD-006",
+      "producto": "Desinfectante multiusos",
+      "tipo": "salida",
+      "cantidad": 6,
+      "stockAnterior": 110,
+      "stockNuevo": 104,
+      "motivo": "Pedido _6g3ZTn",
+      "fecha": "2026-10-21T00:41:27.783Z",
+      "id": 8
+    },
+    {
+      "productoId": "PROD-001",
+      "producto": "Jabón líquido para ropa",
+      "tipo": "entrada",
+      "cantidad": 23,
+      "stockAnterior": 114,
+      "stockNuevo": 137,
+      "motivo": "Entrada de mercancia",
+      "fecha": "2026-10-21T02:26:59.361Z",
+      "id": 9
+    }
+  ],
+  "conductores": [
+    {
+      "id": "aae24ac5-bafd-49d0-aec6-4bf48d8d7eb8",
+      "nombre": "Frank Martinez",
+      "cedula": "1033695249",
+      "telefono": "3224337505",
+      "correo": "frankmartinezzduarte@gmail.com",
+      "zona": "Bogotá Sur",
+      "estado": "Inactivo"
+    },
+    {
+      "id": "700a7051-41a6-404f-88b6-1d51004ded5e",
+      "nombre": "Luis Ospina",
+      "cedula": "30303030",
+      "telefono": "30303303",
+      "correo": "akhiro644@gmail.com",
+      "zona": "Sur",
+      "estado": "Activo"
+    }
+  ],
+  "rutas": [
+    {
+      "nombre": "asd-prueba",
+      "zona": "asd",
+      "conductor": "Frank Martinez",
+      "pedidos": [
+        "PED-1791483275204"
+      ],
+      "cantidadPedidos": 1,
+      "estado": "Pendiente",
+      "fechaActualizacion": "2026-10-09T18:24:25.750Z",
+      "fechaCreacion": "2026-09-21T20:11:02.670Z",
+      "id": 1
+    },
+    {
+      "nombre": "Ruta Bogotá Norte",
+      "zona": "Chapinero",
+      "conductor": "juan perez",
+      "pedidos": [
+        "TnH5bYU"
+      ],
+      "cantidadPedidos": 1,
+      "estado": "En ruta",
+      "fechaActualizacion": "2026-09-21T20:44:14.373Z",
+      "fechaCreacion": "2026-09-21T20:43:32.166Z",
+      "id": 2
+    }
+  ],
+  "solicitudes": [
+    {
+      "id": "SOL-1791912396175-1",
+      "fecha": "2026-10-13T17:26:36.175Z",
+      "cliente": "Cliente",
+      "clienteEmail": "cliente@bulkway.com",
+      "direccion": "ASDAD",
+      "items": [
+        {
+          "productoId": "PROD-001",
+          "producto": "Jabón líquido para ropa",
+          "cantidad": 1,
+          "precioUnitario": 12900,
+          "subtotal": 12900
+        }
+      ],
+      "cantidadTotal": 1,
+      "total": 12900,
+      "estado": "Aprobada",
+      "observacion": "Solicitud enviada por el cliente.",
+      "pedidoId": "PED-1791914176248-1",
+      "pedidoIds": [
+        "PED-1791914176248-1"
+      ],
+      "fechaAprobacion": "2026-10-13T17:56:16.248Z"
+    }
+  ]
+}

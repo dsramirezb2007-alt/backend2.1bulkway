@@ -1,0 +1,336 @@
+@media (max-width: 1000px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-brand-panel {
+    min-height: 300px;
+  }
+
+  .role-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .new-app-shell .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .new-app-shell .welcome-panel {
+    display: block;
+  }
+
+  .new-app-shell .quick-grid {
+    margin-top: 25px;
+  }
+
+  .product-admin-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .employee-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .inventory-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .invoice-card {
+    grid-template-columns: 1fr;
+  }
+
+  .new-nav-links {
+    gap: 14px;
+  }
+
+  .hero-grid-new,
+  .modern-company-grid,
+  .logistics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-grid-new {
+    padding-bottom: 100px;
+  }
+
+  .hero-art-wrap {
+    min-height: 390px;
+  }
+
+  .modern-company-grid,
+  .logistics-grid {
+    gap: 45px;
+  }
+
+  .products-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-header {
+    grid-template-columns: auto auto 1fr;
+    padding: 0 22px;
+  }
+
+  .workspace-mobile {
+    display: block;
+    border: 0;
+    background: #f1e9ff;
+    color: var(--purple);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .workspace-nav {
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    top: 75px;
+    background: #fff;
+    border: 1px solid #e2d8eb;
+    border-radius: 12px;
+    padding: 10px;
+    display: none;
+    box-shadow: 0 20px 45px rgba(50,20,75,.12);
+  }
+
+  .workspace-nav.open {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .workspace-nav button {
+    flex: 1 1 130px;
+  }
+
+  .workspace-user {
+    justify-self: end;
+  }
+
+  .workspace-main {
+    padding: 30px 22px;
+  }
+
+  .intro-grid {
+    grid-template-columns: 70px 1fr;
+  }
+
+  .intro-grid .body-copy {
+    grid-column: 2;
+  }
+
+  .new-nav-links > a:not(.new-login) {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .auth-page {
+    padding: 12px;
+  }
+
+  .auth-brand-panel {
+    padding: 32px;
+    min-height: 260px;
+  }
+
+  .auth-panel {
+    padding: 34px 25px;
+  }
+
+  .bulk-nav .navbar-collapse {
+    background: #fff;
+    padding: 18px;
+  }
+
+  .nav-login {
+    margin: 10px 0 0;
+  }
+
+  .bulk-hero {
+    min-height: 80vh;
+  }
+
+  .hero-copy {
+    padding: 60px 0;
+  }
+
+  .hero-copy h1 {
+    font-size: 3.1rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .section-pad {
+    padding: 70px 0;
+  }
+
+  .visual-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .new-nav {
+    padding: 18px 0;
+  }
+
+  .new-brand small {
+    display: none;
+  }
+
+  .new-login {
+    padding: 10px 12px;
+  }
+
+  .new-login span {
+    display: none;
+  }
+
+  .new-hero {
+    padding-top: 105px;
+    min-height: 820px;
+  }
+
+  .hero-copy-new h1 {
+    font-size: 3.2rem;
+  }
+
+  .hero-grid-new {
+    gap: 20px;
+  }
+
+  .hero-art-wrap {
+    min-height: 330px;
+  }
+
+  .hero-art {
+    height: 300px;
+  }
+
+  .floating-note {
+    padding: 11px;
+  }
+
+  .note-one {
+    left: 0;
+    top: 35px;
+  }
+
+  .note-two {
+    right: 0;
+    bottom: 25px;
+  }
+
+  .hero-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-bottom div {
+    padding: 11px;
+    border-right: 0;
+    border-bottom: 1px solid #e8e0f0;
+  }
+
+  .intro-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .intro-grid .body-copy {
+    grid-column: 1;
+  }
+
+  .cta-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .new-app-shell .stats-grid,
+  .role-conductor .workspace-body .stats-grid,
+  .role-cliente .workspace-body .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .workspace-heading > div {
+    gap: 10px;
+  }
+
+  .workspace-date {
+    align-self: flex-start;
+  }
+
+  .workspace-user > div {
+    display: none;
+  }
+
+  .workspace-header {
+    gap: 12px;
+    padding: 0 15px;
+  }
+
+  .workspace-brand span {
+    font-size: 1.05rem;
+  }
+
+  .workspace-brand small {
+    font-size: .45rem;
+  }
+
+  .workspace-main {
+    padding: 22px 15px;
+  }
+
+  .process-line {
+    gap: 6px;
+  }
+
+  .process-line i {
+    display: none;
+  }
+
+  .product-admin-grid,
+  .employee-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .invoice-card {
+    grid-template-columns: 1fr;
+  }
+
+  .route-card {
+    grid-template-columns: 1fr;
+  }
+
+  .form-two {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-head {
+    align-items: flex-start;
+    gap: 10px;
+    flex-direction: column;
+  }
+
+  .product-card {
+    align-items: flex-start;
+  }
+
+  .order-details strong {
+    margin-left: 0;
+  }
+
+  .inventory-product-row {
+    align-items: flex-start;
+  }
+
+  .inventory-history .admin-table {
+    min-width: 900px;
+  }
+}
